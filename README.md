@@ -4,6 +4,8 @@ This project isolates the Windows/Python environment used to identify, inspect,
 and update the verified target ESL. Read-only investigation tools and the
 explicitly bounded display writer are kept separate.
 
+Japanese case study: [AIと相談しながら、2.1インチESLタグをBLE解析して画像表示まで動かした話](articles/qiita_ai_assisted_esl_ble_development.md)
+
 ## Safety boundary
 
 - `scan_ble.py` receives advertisements only.

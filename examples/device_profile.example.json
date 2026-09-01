@@ -1,0 +1,18 @@
+{
+  "_comment": "Public example only. Generate a verified local profile on the PC that will control the ESL; do not fill this file in by hand.",
+  "status": "EXAMPLE_ONLY",
+  "reason": "This file intentionally contains no real device identifier and cannot authorize a device write.",
+  "address": "<LOCAL_BLE_ADDRESS>",
+  "candidate_model": "2.1-inch TFT ESL",
+  "candidate_model_id": "0xA0",
+  "write_allowed": false,
+  "hard_gates": {
+    "unique_candidate": false,
+    "power_cycle_verified": false,
+    "model_id_verified": false,
+    "gatt_profile_verified": false,
+    "image_dimensions_verified": false,
+    "non_dfu_write_path_verified": false,
+    "user_device_write_approval": false
+  }
+}

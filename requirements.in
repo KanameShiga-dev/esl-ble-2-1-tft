@@ -1,0 +1,5 @@
+bleak==3.0.2
+gicisky==0.2.1
+numpy==2.5.2
+pillow==12.3.0
+qrcode==8.2

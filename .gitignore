@@ -1,0 +1,40 @@
+# Python/runtime files are rebuilt on each PC.
+.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# BLE identifiers, device profiles, write history, and generated media stay local.
+/logs/**
+!/logs/.gitkeep
+/evidence/**
+!/evidence/.gitkeep
+/images/**
+!/images/.gitkeep
+
+# Real-device photos and the private experiment report are not public artifacts.
+/reports/assets/device_*.jpg
+/reports/assets/qr_decode_result.jpg
+/reports/display_results_report.html
+
+# Local settings and credentials must never be committed.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*.json
+*secrets*.json
+
+# Build and editor artifacts.
+/build/
+/dist/
+*.zip
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

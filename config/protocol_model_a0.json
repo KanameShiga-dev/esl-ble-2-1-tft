@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "authority": "implementation-derived",
+  "model_id": "0xA0",
+  "model": "TFT 2.1 BW",
+  "logical_dimensions": {
+    "width": 250,
+    "height": 132,
+    "color_mode": "BW"
+  },
+  "display_update_path": {
+    "service_uuid": "0000fef0-0000-1000-8000-00805f9b34fb",
+    "command_uuid": "0000fef1-0000-1000-8000-00805f9b34fb",
+    "image_uuid": "0000fef2-0000-1000-8000-00805f9b34fb"
+  },
+  "payload_layout": {
+    "logical_input": "250x132 BW",
+    "tft_resize": "125x264",
+    "rotation_degrees": 90,
+    "mirror_x": true,
+    "expected_uncompressed_bytes": 4125,
+    "compression": false,
+    "chunk_image_bytes": 240,
+    "chunk_count": 18
+  },
+  "forbidden_paths": [
+    {
+      "reason": "Semantics not established",
+      "characteristic_uuid": "0000fef3-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "reason": "Telink OAD/OTA firmware service",
+      "service_uuid": "00010203-0405-0607-0809-0a0b0c0d1912",
+      "characteristic_uuid": "00010203-0405-0607-0809-0a0b0c0d2b12"
+    }
+  ],
+  "automatic_retries": 0
+}

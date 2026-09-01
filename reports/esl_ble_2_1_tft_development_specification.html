@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>ESL BLE 2.1 TFT 開発仕様書 — Model 0xA0</title>
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #5d6975;
+      --line: #d8e1e8;
+      --canvas: #f3f6f8;
+      --paper: #ffffff;
+      --navy: #15324a;
+      --blue: #176b9c;
+      --teal: #087f78;
+      --green: #176b46;
+      --green-bg: #e8f6ef;
+      --amber: #815800;
+      --amber-bg: #fff5d8;
+      --red: #9b2d30;
+      --red-bg: #fff0f0;
+      --violet: #5b4a91;
+      --violet-bg: #f2effb;
+      --code: #10202d;
+      --shadow: 0 10px 28px rgba(30, 55, 75, .07);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+      line-height: 1.72;
+    }
+    a { color: var(--blue); text-underline-offset: 2px; }
+    code, pre, .mono { font-family: "Cascadia Mono", "Consolas", monospace; }
+    code {
+      border: 1px solid #dbe4ea;
+      border-radius: 5px;
+      background: #f7fafb;
+      padding: .08em .32em;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      margin: 14px 0;
+      border: 1px solid #294353;
+      border-radius: 12px;
+      background: var(--code);
+      color: #eaf4fa;
+      padding: 16px 18px;
+      overflow: auto;
+      line-height: 1.55;
+      font-size: .86rem;
+    }
+    pre code { border: 0; background: transparent; padding: 0; color: inherit; }
+    h1, h2, h3, h4 { line-height: 1.28; }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.75rem); letter-spacing: -.035em; }
+    h2 { margin: 0 0 14px; font-size: clamp(1.4rem, 2.3vw, 2rem); }
+    h3 { margin: 24px 0 9px; font-size: 1.13rem; }
+    h4 { margin: 18px 0 7px; font-size: 1rem; }
+    p { margin: 9px 0 14px; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: 5px; }
+    .wrap { width: min(1220px, calc(100% - 32px)); margin: 0 auto; }
+    .hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(63, 205, 190, .28), transparent 30%),
+        linear-gradient(135deg, #102b42 0%, #15547a 57%, #087b74 100%);
+      padding: 54px 0 42px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #bfe8f7;
+      font-weight: 800;
+      letter-spacing: .14em;
+      font-size: .77rem;
+    }
+    .lede { max-width: 890px; color: #e5f6fb; font-size: 1.05rem; }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .hero-badge {
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+      padding: 5px 11px;
+      font-size: .83rem;
+    }
+    main { padding: 26px 0 62px; }
+    section { margin: 28px 0; scroll-margin-top: 15px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--paper);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .card > :first-child { margin-top: 0; }
+    .card > :last-child { margin-bottom: 0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .facts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .fact {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 15px;
+    }
+    .fact strong { display: block; color: var(--blue); font-size: 1.35rem; letter-spacing: -.02em; }
+    .fact span { display: block; color: var(--muted); font-size: .82rem; }
+    .toc {
+      columns: 2;
+      column-gap: 34px;
+      margin: 0;
+      padding-left: 1.3rem;
+    }
+    .toc li { break-inside: avoid; margin: 3px 0; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .verified { color: var(--green); background: var(--green-bg); }
+    .derived { color: var(--violet); background: var(--violet-bg); }
+    .unknown { color: var(--amber); background: var(--amber-bg); }
+    .forbidden { color: var(--red); background: var(--red-bg); }
+    .callout {
+      border-left: 4px solid var(--blue);
+      border-radius: 0 12px 12px 0;
+      background: #eaf4fa;
+      padding: 14px 16px;
+      margin: 15px 0;
+    }
+    .callout.warn { border-left-color: #bd8100; background: var(--amber-bg); }
+    .callout.stop { border-left-color: var(--red); background: var(--red-bg); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .91rem; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 11px; text-align: left; vertical-align: top; }
+    thead th { color: #fff; background: var(--navy); white-space: nowrap; }
+    tbody th { width: 22%; color: #465663; background: #f7fafb; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    .bytes { font-family: "Cascadia Mono", "Consolas", monospace; white-space: nowrap; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .flow .step {
+      position: relative;
+      min-height: 86px;
+      border: 1px solid #cddbe4;
+      border-radius: 13px;
+      background: #fff;
+      padding: 12px;
+    }
+    .flow .step:not(:nth-child(5n))::after {
+      content: "→";
+      position: absolute;
+      right: -10px;
+      top: 30px;
+      z-index: 2;
+      color: var(--teal);
+      font-weight: 900;
+    }
+    .flow b { display: block; margin-bottom: 3px; color: var(--navy); }
+    .flow small { color: var(--muted); line-height: 1.45; display: block; }
+    .packet {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .packet b { background: #e9f2f7; padding: 12px; }
+    .packet span { background: #fff; padding: 12px; overflow-wrap: anywhere; }
+    .gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+    figure img {
+      display: block;
+      width: 100%;
+      height: 170px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: #eef3f5;
+    }
+    figcaption { padding: 10px 12px; font-size: .84rem; }
+    figcaption b { display: block; }
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { position: relative; padding-left: 1.6rem; }
+    .checklist li::before { content: "□"; position: absolute; left: 0; color: var(--teal); font-weight: 900; }
+    .small { color: var(--muted); font-size: .84rem; }
+    .hash { word-break: break-all; font-family: "Cascadia Mono", "Consolas", monospace; font-size: .77rem; }
+    footer { color: var(--muted); font-size: .83rem; padding: 4px 0 38px; }
+    @media (max-width: 960px) {
+      .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow .step::after { display: none; }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      .wrap { width: min(100% - 20px, 1220px); }
+      .hero { padding: 38px 0 32px; }
+      .grid-2, .grid-3, .facts, .flow, .gallery { grid-template-columns: 1fr; }
+      .toc { columns: 1; }
+      .packet { grid-template-columns: 1fr; }
+      figure img { height: auto; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { color: var(--ink); background: #eaf4f7; }
+      .eyebrow, .lede { color: #35566a; }
+      .card, .fact { box-shadow: none; }
+      section, .card, figure, table, pre { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">IMPLEMENTATION-DERIVED DEVICE SPECIFICATION · 2026-09-01 · JST</p>
+      <h1>ESL BLE 2.1 TFT<br>開発仕様書</h1>
+      <p class="lede">この端末は、PCと<strong>Bluetooth Low Energy（BLE）</strong>で直接通信する、電池式の2.1インチ小型表示器です。PCで完成させた<strong>250×132ドットの白黒画像</strong>を送り、文字・線画・QRコードを表示します。通常の利用にWi-Fi接続やIPアドレスは必要ありません。</p>
+      <div class="hero-badges">
+        <span class="hero-badge">通信: Bluetooth Low Energy</span>
+        <span class="hero-badge">表示: 250×132 / 白黒画像</span>
+        <span class="hero-badge">電源: 電池式</span>
+        <span class="hero-badge">電池寿命: 2〜3年程度が目安※</span>
+        <span class="hero-badge">実機転送・QR読取確認済み</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="overview">
+      <div class="card">
+        <h2>まず最初に：このESL端末は何をするものか</h2>
+        <div class="callout"><strong>ざっくり一言:</strong> Bluetoothで完成画像を送り、必要なときだけ画面を書き換える「電池式の小さな掲示板」です。</div>
+        <p>この機種へ直接渡すものは文字列ではなく、<strong>PC側で文字・絵・QRコードを配置した1枚の完成画像</strong>です。送信ツールが画像を端末用データへ変換し、BLEで端末へ書き込みます。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>基本項目</th><th>ざっくりした説明</th><th>確認区分</th></tr></thead>
+            <tbody>
+              <tr><td>通信方式</td><td><strong>Bluetooth Low Energy（BLE）</strong>。2.4GHz帯を使い、PCと端末が近距離で直接通信します。通常の表示更新にWi-Fi、インターネット、IPアドレスは不要です。</td><td><span class="tag verified">実機確認済み</span></td></tr>
+              <tr><td>表示方法</td><td>PCで作った<strong>250×132ドットの完全な白黒画像</strong>を、1画面分まとめて転送します。</td><td><span class="tag verified">実機確認済み</span></td></tr>
+              <tr><td>表示できるもの</td><td>文字、数字、線画、簡単なアイコン、バーコード、QRコード。これらはすべて画像として送ります。</td><td><span class="tag verified">文字・線画・QR確認済み</span></td></tr>
+              <tr><td>更新の性質</td><td>新しい画像を送るたびに画面全体を更新します。静止した案内を、ときどき変更する用途に向きます。動画や短い間隔での連続更新には向きません。</td><td><span class="tag derived">実装由来</span></td></tr>
+              <tr><td>電源</td><td>電池で動作します。電池の正確な型式・容量は、この個体について本書では確定していません。</td><td><span class="tag unknown">一部未確認</span></td></tr>
+              <tr><td>電池寿命</td><td><strong>2〜3年程度</strong>を導入計画上の大まかな目安にできます。ただし同型・類似品の販売情報に見られる値で、この購入個体での長期実測値でも、入手済みのメーカー公式保証値でもありません。更新回数、通信状態、温度、電池品質で大きく変わります。</td><td><span class="tag unknown">目安・未実測</span></td></tr>
+              <tr><td>端末へ渡すデータ</td><td>直接のテキスト命令ではなく画像データです。アプリから文字を表示したい場合も、PC側で文字を画像へ描いてから送ります。</td><td><span class="tag verified">現行経路で確認済み</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">※「2〜3年」は交換時期を保証する数値ではありません。運用開始後は、更新回数と電池交換日を記録して、この環境での実寿命へ置き換えてください。</p>
+      </div>
+    </section>
+
+    <section id="quick-facts">
+      <div class="facts">
+        <div class="fact"><strong>BLE</strong><span>PCと近距離で直接通信</span></div>
+        <div class="fact"><strong>250×132</strong><span>送信する画像のサイズ</span></div>
+        <div class="fact"><strong>白黒</strong><span>文字・絵・QRを画像化</span></div>
+        <div class="fact"><strong>画像1枚</strong><span>送信ごとに全画面更新</span></div>
+        <div class="fact"><strong>2〜3年※</strong><span>電池寿命の大まかな目安</span></div>
+      </div>
+    </section>
+
+    <section id="ai-assisted-investigation">
+      <h2>AIと一緒に、未知のESL端末を調べるという進め方</h2>
+      <div class="card">
+        <div class="callout"><strong>今回得られた重要な知見:</strong> ESLは機種ごとに通信方式やプロトコルが異なります。それでも、Bluetooth Low Energy（BLE）のようにPCから観測できる方式であれば、AIと会話しながら結果を一つずつ照合し、端末の特定、通信構造の把握、安全な試験へ段階的に進められます。</div>
+        <p>今回の調査では、利用者がChatGPTと会話しながら、指示された時点でESL端末の電源をOFF・ONしました。AI側はその前後のスキャン結果を比較し、「候補が消えたか」「同じ候補が再び現れたか」「接続できたか」「期待した応答が返ったか」を順番に整理しました。この手探りの確認を積み重ね、最終的に画像データの転送と実機表示まで到達しています。<span class="tag verified">今回の実機で確認済み</span></p>
+        <div class="callout warn"><strong>誤解しやすい点:</strong> 電源ON/OFFだけで通信プロトコル全体が解析できるわけではありません。ON/OFF比較は、周囲にある複数のBluetooth機器から「どれが対象ESLか」を特定するための強い証拠です。その後に、GATTサービス、Characteristic、通知、ACK、既存資料、限定した試験結果を組み合わせてプロトコルを絞り込みます。</div>
+      </div>
+
+      <div class="flow" aria-label="AI支援によるESL調査の流れ">
+        <div class="step"><b>1. 方式を確認</b><small>BLE、独自2.4GHz、NFC、基地局方式などを調べる</small></div>
+        <div class="step"><b>2. ONで観測</b><small>広告を受信し、候補だけを記録する</small></div>
+        <div class="step"><b>3. OFFで比較</b><small>対象候補だけが消えるか確認する</small></div>
+        <div class="step"><b>4. ONで再確認</b><small>同じ候補が安定して再出現するか確認する</small></div>
+        <div class="step"><b>5. 読取り調査</b><small>GATT構造と安全な標準情報を確認する</small></div>
+        <div class="step"><b>6. 仮説を照合</b><small>コード、資料、応答形式から表示経路を絞る</small></div>
+        <div class="step"><b>7. 限定試験</b><small>対象・画像・回数を固定し、承認後に1回だけ送る</small></div>
+        <div class="step"><b>8. 人が確認</b><small>画面、向き、内容を目視し、結果をAIへ返す</small></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>人が担当すること</h3>
+          <ul>
+            <li>端末の電源OFF・ON、電池状態、距離など現物の操作</li>
+            <li>端末ラベルと画面の目視確認</li>
+            <li>周囲の同型端末や純正アプリを切り離す判断</li>
+            <li>端末へ書き込む直前の明示承認</li>
+            <li>表示結果や異常をAIへ正確に伝えること</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>AIが支援できること</h3>
+          <ul>
+            <li>安全なスキャン・比較・解析スクリプトの作成</li>
+            <li>ON/OFF前後のログ差分と候補の整理</li>
+            <li>GATT構造、応答、公開コード、資料の照合</li>
+            <li>次に確認すべき内容を一段ずつ提示</li>
+            <li>誤送信、無限再試行、OTA経路を避ける安全ゲートの実装</li>
+            <li>成功・失敗・未確認事項を文書として残すこと</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:15px">
+        <h3>他のESLにも応用できる範囲</h3>
+        <p><span class="tag derived">条件付きで応用可能</span> 通信方式がPCやスマートフォンから観測でき、端末が強い暗号化・認証・専用基地局だけに閉じていなければ、この調査方法は別機種にも応用できます。ただし、解像度、色、UUID、画像変換、パケット、ACKは機種ごとに再確認が必要で、今回の送信スクリプトをそのまま使用してはいけません。</p>
+        <p>AIは観測結果から仮説を作り、検証手順を組み立てる有力な支援者になりますが、現物を見たり電源を操作したりはできません。また、暗号化された独自プロトコルの解除や、根拠のない危険な書込みを正当化するものでもありません。<strong>人が現物を操作し、AIが分析し、重要操作は人が承認する</strong>という役割分担が、この方法の中心です。</p>
+        <div class="callout warn"><strong>AI利用時のプライバシー:</strong> 外部AIサービスへ相談するときは、BLEアドレス、端末ラベル番号、生のスキャンログ、端末profile、家庭内情報をそのまま送らず、必要な項目だけを匿名化して共有します。端末操作そのものはローカルPCで行い、AIへ渡す情報と実機への書込みを分離してください。</div>
+      </div>
+    </section>
+
+    <section id="status">
+      <div class="card">
+        <h2>この文書の位置づけ</h2>
+        <p><strong>これはベンダー公式仕様書ではありません。</strong>ローカルで取得したBLE広告・GATT列挙、監査したPython実装、複数回の成功転送、実機写真、QR読み取り結果から作成した「実装由来仕様」です。別型番・別ファームウェアへ無条件に適用しないでください。</p>
+        <div class="legend" aria-label="根拠区分">
+          <span class="tag verified">確認済み</span>
+          <span>実機観測または自動試験で確認</span>
+          <span class="tag derived">実装由来</span>
+          <span>監査済みコードと成功挙動から定義</span>
+          <span class="tag unknown">未確認</span>
+          <span>追加調査が必要</span>
+          <span class="tag forbidden">使用禁止</span>
+          <span>表示更新に不要または危険</span>
+        </div>
+        <div class="callout warn">
+          元の添付HTMLは調査開始時の作業指示・仮説です。本書では、その指示そのものではなく、後続の実機結果と現在のローカル実装を優先して仕様化しています。
+        </div>
+        <div class="callout">
+          <strong>識別情報の掲載方針:</strong> 実機固有のBLEアドレス、MAC相当値、IPアドレス、前面ラベル番号、使用環境や利用者を特定できる値は掲載しません。本文の<code>0xA0</code>、<code>FEF0</code>〜<code>FEF2</code>、コマンド値は、この機種で共通する開発用の短縮表記であり、個体識別子ではありません。
+        </div>
+      </div>
+    </section>
+
+    <section id="easy-start">
+      <h2>0. はじめての人は、ここだけ読めば操作できます</h2>
+      <div class="card">
+        <p><strong>普段の操作で触るのは画像ファイル1枚だけです。</strong> 画像を<a href="../SEND_IMAGE.cmd">SEND_IMAGE.cmd</a>へドラッグ＆ドロップします。UUID、BLEアドレス、payload、ACKを手で指定する必要はありません。内部では<a href="../scripts/send_image.py">send_image.py</a>が、画像検査・端末探索・通信確認・送信を順番に行います。</p>
+        <div class="callout">この簡易ツールは「簡単にするために安全確認を省く」のではなく、難しい確認を内部で自動実行します。実際の書込み直前には、必ず利用者が大文字で<code>SEND</code>と入力します。</div>
+      </div>
+
+      <div class="grid-3" style="margin-top:15px">
+        <div class="card">
+          <h3>1. 画像を用意</h3>
+          <p><code>250 × 132</code>ピクセルの画像を1枚用意します。PNGを推奨します。</p>
+          <ul>
+            <li>カラーやグレーでも可</li>
+            <li>送信前に自動で完全な白黒へ変換</li>
+            <li>サイズ違いは引き伸ばさず停止</li>
+          </ul>
+          <p class="small">まず試す画像: <a href="assets/sample_clear_v3.png">sample_clear_v3.png</a></p>
+        </div>
+        <div class="card">
+          <h3>2. ドラッグ＆ドロップ</h3>
+          <p>Explorerで<a href="../SEND_IMAGE.cmd">SEND_IMAGE.cmd</a>を表示し、用意した画像をそのファイルの上へドラッグして離します。</p>
+          <pre><code>画像.png
+   ↓ ドラッグ＆ドロップ
+SEND_IMAGE.cmd</code></pre>
+          <p>黒い画面が開き、自動でサイズ確認と対象端末の探索を始めます。</p>
+        </div>
+        <div class="card">
+          <h3>3. SENDで確定</h3>
+          <p>対象端末が見つかると、実際に書き込む前に停止します。</p>
+          <pre><code>送信する場合だけ SEND と入力:</code></pre>
+          <p>画像を送る場合だけ大文字で<code>SEND</code>と入力します。やめる場合は何も入力せずEnterを押します。</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:15px">
+        <h3>PowerShellから操作する場合</h3>
+        <p>まず送信なしで検査し、<code>確認OK</code>を確認できます。</p>
+        <pre><code>cd &lt;ESL_PROJECT_DIR&gt;\esl-control
+.\.venv\Scripts\python.exe scripts\send_image.py images\clear_sample_adjusted_v3.png --check-only</code></pre>
+        <p>実際に送る場合は<code>--check-only</code>を外します。</p>
+        <pre><code>.\.venv\Scripts\python.exe scripts\send_image.py images\clear_sample_adjusted_v3.png</code></pre>
+      </div>
+
+      <div class="grid-2" style="margin-top:15px">
+        <div class="card">
+          <h3>成功時</h3>
+          <pre><code>1/3 端末を探しています...
+2/3 対象端末を確認しました。
+送信する場合だけ SEND と入力: SEND
+3/3 画像を送信しています...
+送信完了: ESLの画面を目で確認してください。</code></pre>
+          <p>通信完了後、画面の向き・見切れ・内容を目で確認します。</p>
+        </div>
+        <div class="card">
+          <h3>止まったとき</h3>
+          <ul>
+            <li><strong>サイズが違う:</strong> 画像編集ソフトで250×132へ変更</li>
+            <li><strong>端末が見つからない:</strong> 電池、Bluetooth、距離を確認</li>
+            <li><strong>対象を1台にできない:</strong> 近くの同型端末をOFF</li>
+            <li><strong>送信失敗:</strong> 連続実行せず、画面と電池状態を確認</li>
+            <li><strong>中止したい:</strong> <code>SEND</code>を入力せずEnter</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout stop"><strong>やらないこと:</strong> <code>FEF3</code>やOTA UUIDを試す、失敗後に何度も連打する、別サイズの画像を無理に送る、送信中に電池を外す。通常操作では低レベルスクリプトを直接編集しません。</div>
+    </section>
+
+    <section id="toc">
+      <div class="card">
+        <h2>目次</h2>
+        <ol class="toc">
+          <li><a href="#overview">30秒で分かる端末概要</a></li>
+          <li><a href="#ai-assisted-investigation">AIと進める未知端末の調査</a></li>
+          <li><a href="#easy-start">初心者向けかんたん操作</a></li>
+          <li><a href="#scope">対象と非対象</a></li>
+          <li><a href="#environment">開発・実行環境</a></li>
+          <li><a href="#architecture">構成と責務分離</a></li>
+          <li><a href="#discovery">BLE広告と端末識別</a></li>
+          <li><a href="#gatt">GATTマップ</a></li>
+          <li><a href="#protocol">表示更新プロトコル</a></li>
+          <li><a href="#packets">パケット詳細</a></li>
+          <li><a href="#image">画像変換仕様</a></li>
+          <li><a href="#implementation">一からの実装手順</a></li>
+          <li><a href="#state">状態・タイムアウト・復旧</a></li>
+          <li><a href="#rendering">文字・絵・QRの設計</a></li>
+          <li><a href="#integration">上位システム連携</a></li>
+          <li><a href="#test">試験と完了条件</a></li>
+          <li><a href="#privacy">安全・プライバシー</a></li>
+          <li><a href="#unknowns">既知の未確認事項</a></li>
+          <li><a href="#sources">根拠ファイルと版管理</a></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="scope">
+      <h2>1. 対象と非対象</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>対象</h3>
+          <ul>
+            <li>BLE広告でModel ID <code>0xA0</code>を示す2.1インチTFT ESL</li>
+            <li>GATT Service <code>FEF0</code>とCharacteristics <code>FEF1</code>/<code>FEF2</code>を持つ実機</li>
+            <li>PC側で250×132の白黒画像を生成し、フルフレーム転送する処理</li>
+            <li>Windows 11 + Python/Bleakを基準とし、将来Linux/Raspberry Piへ移植可能な分離構成</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>非対象</h3>
+          <ul>
+            <li>Model IDが異なるEPD/ESL、250×122や250×128の別機種</li>
+            <li>ファームウェア更新、Telink OAD/OTA、DFU、NVM、工場出荷リセット</li>
+            <li>意味が確定していない<code>FEF3</code>へのRead/Write</li>
+            <li>純正アプリの解析、認証回避、無承認の周辺端末操作</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout stop"><strong>適用条件:</strong> Model ID、FEF0/FEF1/FEF2、論理寸法、対象の一意性がすべて一致しない限り、送信処理を開始しません。</div>
+    </section>
+
+    <section id="environment">
+      <h2>2. 開発・実行環境</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>項目</th><th>基準</th><th>備考</th></tr></thead>
+            <tbody>
+              <tr><td>OS</td><td>Windows 11 x64</td><td><span class="tag verified">確認済み</span> Windows BLEスタックをBleakから利用</td></tr>
+              <tr><td>Python</td><td>3.14.4 / project-local <code>.venv</code></td><td>管理者権限は不要。グローバル環境を変更しない</td></tr>
+              <tr><td>BLE</td><td><code>bleak==3.0.2</code></td><td>接続、GATT列挙、通知、Write Without Response</td></tr>
+              <tr><td>画像</td><td><code>pillow==12.3.0</code> / <code>numpy==2.5.2</code></td><td>描画、変換、比較</td></tr>
+              <tr><td>互換実装</td><td><code>gicisky==0.2.1</code></td><td>モデル・通信仕様の参照。現在の送信は監査済み独自変換を使用</td></tr>
+              <tr><td>QR</td><td><code>qrcode==8.2</code></td><td>ローカル生成。ネットワーク送信なし</td></tr>
+              <tr><td>権限</td><td>通常ユーザー</td><td>Windows BluetoothはON、他アプリの接続は解除</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>再構築</h3>
+        <pre><code>cd &lt;ESL_PROJECT_DIR&gt;\esl-control
+py -3.14 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --disable-pip-version-check -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe scripts\check_environment.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v</code></pre>
+        <p class="small">移植先ではPythonの版を先に固定し、同じ依存バージョンで再現試験を行います。BLEの最大Write長と通知タイミングはOS/backend依存のため、Windowsで成功しても自動的にLinux対応とはみなしません。</p>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>3. 構成と責務分離</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>表示要求</h3>
+          <p>予定・タスク・状態を、名前やBLEアドレスを含まない抽象データとして受け取ります。</p>
+          <p class="small">例: 「お知らせ」「次の作業」「完了」</p>
+        </div>
+        <div class="card">
+          <h3>レンダラー</h3>
+          <p>文字・アイコン・QRを250×132の完全な白黒RGB画像へ描画し、レイアウト検査を行います。</p>
+        </div>
+        <div class="card">
+          <h3>BLEワーカー</h3>
+          <p>ローカルの端末プロファイルを参照し、Fresh Scan、GATT Preflight、画像転送、結果記録を担当します。</p>
+        </div>
+      </div>
+      <div class="callout">任意の上位アプリはBLEアドレスやFEF1/FEF2を直接扱いません。端末固有情報をBLEワーカー内へ閉じ込めると、別のPCアプリや小型サーバへ接続する場合も、プライバシーと復旧手順を保ちやすくなります。</div>
+    </section>
+
+    <section id="discovery">
+      <h2>4. BLE広告と端末識別</h2>
+      <div class="card">
+        <h3>候補判定</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>観測項目</th><th>期待値</th><th>根拠区分</th></tr></thead>
+            <tbody>
+              <tr><td>Local Name</td><td><code>NEMR...</code>、標準Device Nameは<code>PICKSMART</code></td><td><span class="tag verified">確認済み</span> 名前単独では判定しない</td></tr>
+              <tr><td>Service UUID</td><td><code>FEF0</code>（短縮表記）</td><td><span class="tag verified">確認済み</span> 個体識別子ではない</td></tr>
+              <tr><td>Manufacturer ID</td><td><code>0x5053</code></td><td><span class="tag verified">確認済み</span></td></tr>
+              <tr><td>Manufacturer Data byte 0</td><td><code>0xA0</code></td><td><span class="tag verified">確認済み</span> Model ID</td></tr>
+              <tr><td>電源OFF/ON</td><td>OFFで消失、ONで同一候補が1台だけ再出現</td><td><span class="tag verified">確認済み</span></td></tr>
+              <tr><td>信頼度</td><td>0.80以上</td><td><span class="tag derived">実装由来</span> 安全ゲート</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Manufacturer Dataの既知レイアウト</h3>
+        <p><code>gicisky 0.2.1</code>はManufacturer ID <code>0x5053</code>の値を次のように解釈します。Model ID以外はこの実機で独立校正していないため、制御判断には使いません。</p>
+        <div class="packet"><b>byte 0</b><span>Model ID。対象は<code>A0</code>。<span class="tag verified">確認済み</span></span></div>
+        <div class="packet"><b>byte 1</b><span>電圧の10分の1 Vとして解釈。例: 値25なら2.5 V。<span class="tag unknown">未校正</span></span></div>
+        <div class="packet"><b>bytes 2–3</b><span>Firmware値、Big Endianとして解釈。<span class="tag unknown">未検証</span></span></div>
+        <div class="packet"><b>byte 4</b><span>ライブラリはModel IDを上位8 bit、byte 4を下位8 bitにしたHardware値を構成。<span class="tag unknown">意味未検証</span></span></div>
+        <h3>識別手順</h3>
+        <ol>
+          <li>20〜30秒の受信専用スキャンを2回行い、候補が単一であることを確認。</li>
+          <li>操作者が電池をOFFにして再スキャンし、候補が消えることを確認。</li>
+          <li>ONに戻して再スキャンし、同じ候補だけが戻ることを確認。</li>
+          <li>明示アドレスへRead-only接続し、FEF0/FEF1/FEF2の構成を確認。</li>
+          <li>以降も送信直前のFresh Scanで、アドレス・Model ID・FEF0・候補数を再確認。</li>
+        </ol>
+        <div class="callout warn">前面ラベルの10進風グループを16進変換してBLEアドレスを作る方法は、この実機では一致しませんでした。ラベルからアドレスを推測せず、実測したローカルプロファイルを使用します。</div>
+      </div>
+    </section>
+
+    <section id="gatt">
+      <h2>5. GATTマップ</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>UUID</th><th>実機Properties</th><th>本実装での扱い</th><th>状態</th></tr></thead>
+            <tbody>
+              <tr><td><code>FEF0</code></td><td>Service</td><td>表示更新サービス</td><td><span class="tag verified">確認済み</span></td></tr>
+              <tr><td><code>FEF1</code></td><td>notify, write, write-without-response</td><td>コマンド送信とACK通知</td><td><span class="tag verified">使用</span></td></tr>
+              <tr><td><code>FEF2</code></td><td>notify, write, write-without-response</td><td>画像パケット送信。通知機能は使用しない</td><td><span class="tag verified">使用</span></td></tr>
+              <tr><td><code>FEF3</code></td><td>read, write</td><td>意味不明。ReadもWriteもしない</td><td><span class="tag forbidden">使用禁止</span></td></tr>
+              <tr><td><code>&lt;OTA/OAD service&gt;</code></td><td>値は本書に非掲載</td><td>Firmware更新系として表示経路から除外</td><td><span class="tag forbidden">使用禁止</span></td></tr>
+              <tr><td><code>&lt;OTA/OAD characteristic&gt;</code></td><td>値は本書に非掲載</td><td>Firmware経路。送信しない</td><td><span class="tag forbidden">使用禁止</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">FEF0〜FEF3は機種共通の16-bit短縮表記です。実装ではBLE標準のBase UUIDへ展開しますが、本書ではIPアドレスや個体識別子と誤認されないよう長形式を掲載しません。Bluetooth SIGの説明ラベルやHandle番号も識別には使いません。</p>
+      </div>
+    </section>
+
+    <section id="protocol">
+      <h2>6. 表示更新プロトコル</h2>
+      <div class="card">
+        <div class="flow" aria-label="通信シーケンス">
+          <div class="step"><b>1. Fresh Scan</b><small>単一0xA0候補、FEF0、固定プロファイル一致</small></div>
+          <div class="step"><b>2. Connect</b><small>FEF0/FEF1/FEF2とpropertiesを再確認</small></div>
+          <div class="step"><b>3. Subscribe</b><small>FEF1 Notify開始後、固定1.0秒待機</small></div>
+          <div class="step"><b>4. INIT</b><small>FEF1へ01、01 F4 00を待つ</small></div>
+          <div class="step"><b>5. SIZE</b><small>FEF1へ02 + 4,125 LE + 3 zero</small></div>
+          <div class="step"><b>6. START</b><small>FEF1へ03、05 00 + part 0を待つ</small></div>
+          <div class="step"><b>7. CHUNKS</b><small>FEF2へindex LE32 + 最大240 bytes</small></div>
+          <div class="step"><b>8. ACK LOOP</b><small>FEF1の05 00 + 次partを厳密照合</small></div>
+          <div class="step"><b>9. COMPLETE</b><small>05 08を確認、全18 part済みを照合</small></div>
+          <div class="step"><b>10. Disconnect</b><small>Notify停止・切断。画面更新を目視確認</small></div>
+        </div>
+        <div class="callout"><strong>重要な実測差分:</strong> 通知購読の直後にINITを送ると、最初の試行ではACKが来ませんでした。1.0秒の安定化待機を追加した後、同じ経路で繰り返し成功しています。この待機は再試行ではなく、プロトコル前提として扱います。</div>
+      </div>
+    </section>
+
+    <section id="packets">
+      <h2>7. パケット詳細</h2>
+      <div class="card">
+        <h3>コマンドとACK</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>段階</th><th>方向 / Characteristic</th><th>バイト列</th><th>判定</th></tr></thead>
+            <tbody>
+              <tr><td>INIT</td><td>Host → FEF1</td><td class="bytes">01</td><td>1 byte、Write Without Response</td></tr>
+              <tr><td>INIT ACK</td><td>FEF1 Notify → Host</td><td class="bytes">01 F4 00</td><td>prefix完全一致。意味は実装由来</td></tr>
+              <tr><td>SIZE</td><td>Host → FEF1</td><td class="bytes">02 1D 10 00 00 00 00 00</td><td><code>0x0000101D = 4125</code>をLittle Endian 32-bitで格納し、末尾3 zero</td></tr>
+              <tr><td>SIZE ACK</td><td>FEF1 Notify → Host</td><td class="bytes">02 00 10</td><td>実機観測値。現行writerは先頭<code>02</code>を必須判定</td></tr>
+              <tr><td>START</td><td>Host → FEF1</td><td class="bytes">03</td><td>画像ループ開始</td></tr>
+              <tr><td>PART REQUEST</td><td>FEF1 Notify → Host</td><td class="bytes">05 00 pp pp pp pp</td><td><code>05</code>、error <code>00</code>、要求partのLE32。期待連番と一致必須</td></tr>
+              <tr><td>COMPLETE</td><td>FEF1 Notify → Host</td><td class="bytes">05 08 00 00 00 00</td><td>error/code <code>08</code>を完了として扱う。18 part送信済みでなければ異常</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>画像パケット</h3>
+        <div class="packet"><b>bytes 0–3</b><span>Part index、符号なし32-bit Little Endian。0から17まで。</span></div>
+        <div class="packet"><b>bytes 4–243</b><span>画像payload。part 0〜16は各240 bytes。</span></div>
+        <div class="packet"><b>最終part 17</b><span>4-byte index + 45 image bytes = 49 bytes。</span></div>
+        <p>画像payloadは4,125 bytesです。<code>17 × 240 + 45 = 4,125</code>なので、画像Writeは18回。FEF1の3コマンドと合わせて、成功転送は合計21回のGATT Writeになります。</p>
+        <h3>実機で観測したACK列</h3>
+        <pre><code>01 F4 00                    # INIT ACK
+02 00 10                    # SIZE ACK（意味の詳細は未確定）
+05 00 00 00 00 00           # part 0を要求
+05 00 01 00 00 00           # part 1を要求
+...
+05 00 11 00 00 00           # part 17を要求
+05 08 00 00 00 00           # 完了</code></pre>
+        <div class="callout warn"><strong>MTU要件:</strong> 最大GATT valueは244 bytesです。実機とWindows/Bleakの組合せでは成功しましたが、移植先はWrite Without Responseの最大長が244 bytes以上であることを接続後に確認してください。小さなMTUへ勝手に再分割すると端末側の240-byte part契約を壊す可能性があります。</div>
+      </div>
+    </section>
+
+    <section id="image">
+      <h2>8. 画像変換仕様</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>入力契約</h3>
+          <ul>
+            <li>サイズ: 正確に<code>250 × 132</code></li>
+            <li>Mode: <code>RGB</code></li>
+            <li>色: <code>(0,0,0)</code>と<code>(255,255,255)</code>のみ</li>
+            <li>ディザリング: OFF</li>
+            <li>圧縮: なし</li>
+          </ul>
+          <p>端末へ「テキスト」を直接送るのではなく、文字・絵・QRをPC側で1枚の画像へラスタライズします。現時点では部分更新命令も確認していないため、常にフルフレームです。</p>
+        </div>
+        <div class="card">
+          <h3>変換結果</h3>
+          <ul>
+            <li>bit数: <code>250 × 132 = 33,000 bit</code></li>
+            <li>payload: <code>33,000 / 8 = 4,125 byte</code></li>
+            <li>bit順: 1 byte内はMSB first</li>
+            <li>白: 1、黒: 0</li>
+            <li>端数padding: なし</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:15px">
+        <h3>監査済み変換アルゴリズム</h3>
+        <ol>
+          <li>入力をRGBへ変換。</li>
+          <li><code>250×132</code>から<code>125×264</code>へBICUBIC resize。</li>
+          <li>90度反時計回りに回転して<code>264×125</code>へ。</li>
+          <li>各行を右から左へ走査し、X座標を反転。</li>
+          <li>R/G/Bがすべて128より大きければ白bit 1、それ以外は黒bit 0。</li>
+          <li>bit 7からbit 0へ詰めて4,125 bytesを得る。</li>
+        </ol>
+        <pre><code>stage = input_rgb.resize((125, 264), BICUBIC)
+stage = stage.rotate(90, expand=True)       # 264 x 125
+
+for y in range(125):
+    for x in range(263, -1, -1):           # X coordinate reversed
+        r, g, b = stage[x, y]
+        bit = 1 if r &gt; 128 and g &gt; 128 and b &gt; 128 else 0
+        append_msb_first(bit)
+
+assert len(payload) == 4125</code></pre>
+        <div class="callout warn"><code>gicisky 0.2.1</code>のconverterも4,125 bytesを生成しますが、現在のプロジェクトが採用した方向補正とpayloadは一致しません。実機で方向確認済みの<a href="../scripts/prepare_payload.py">prepare_payload.py</a>を基準実装とし、ライブラリ変換へ無条件に置換しません。</div>
+      </div>
+    </section>
+
+    <section id="implementation">
+      <h2>9. 一からの実装手順</h2>
+      <div class="card">
+        <h3>初心者向け: 画像を1つ渡す</h3>
+        <p>通常利用では、下記の1コマンドだけを使用します。端末設定・Fresh Scan・GATT確認・ACK処理は<a href="../scripts/send_image.py">send_image.py</a>が内部で実行します。</p>
+        <pre><code>.\.venv\Scripts\python.exe scripts\send_image.py &lt;250x132の画像ファイル&gt;</code></pre>
+        <p><code>--check-only</code>を付けると、画像とローカル設定の検査だけを行い、BLE通信は行いません。送信モードでも<code>SEND</code>を入力するまでは端末へWriteしません。</p>
+
+        <h3>A. 安全な最小モジュール</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>モジュール</th><th>入力</th><th>出力</th><th>副作用</th></tr></thead>
+            <tbody>
+              <tr><td>Scanner</td><td>duration、任意ラベルsuffix</td><td>候補一覧JSON</td><td>広告受信のみ</td></tr>
+              <tr><td>Identifier</td><td>2回以上のscan、OFF/ON証跡、GATT証跡</td><td>local device profile</td><td>ローカルJSONのみ</td></tr>
+              <tr><td>Renderer</td><td>表示要求</td><td>250×132 RGB/BW PNG</td><td>ローカル画像のみ</td></tr>
+              <tr><td>Payload Builder</td><td>PNG、profile、protocol</td><td>4,125-byte bin、hash-bound plan</td><td>ローカルファイルのみ</td></tr>
+              <tr><td>Bounded Writer</td><td>plan、profile、fresh scan、承認</td><td>転送結果JSON</td><td>FEF1/FEF2へ1回の表示更新</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>B. 実装上の必須チェック</h3>
+        <ol>
+          <li>スキャン結果は候補1台、Model ID 0xA0、FEF0あり、信頼度0.80以上。</li>
+          <li>plan内のtargetとprofileのtargetが一致。</li>
+          <li>payloadのファイル長と計算済みハッシュがplanに一致。</li>
+          <li>FEF3/OTA UUIDのdeny-listがコードに固定され、送信先と交差しない。</li>
+          <li>接続後にFEF0/FEF1/FEF2とpropertiesを再確認。</li>
+          <li>FEF1通知開始後、1.0秒待つ。</li>
+          <li>すべてのACKを順序・長さ・code・part番号で検証。</li>
+          <li>異常通知、timeout、part不一致では直ちに停止し、再送しない。</li>
+          <li>finallyでNotify停止とdisconnectを実行。</li>
+          <li>端末表示は読戻せないため、転送成功と目視成功を別々に記録。</li>
+        </ol>
+        <h3>C. 現行ツールによる再現</h3>
+        <pre><code># 1) Read-only scan（最低2回）
+.\.venv\Scripts\python.exe scripts\scan_ble.py --duration 20
+
+# 2) Read-only GATT（保存済みprofileの正確なアドレスを使用）
+.\.venv\Scripts\python.exe scripts\inspect_gatt.py --address &lt;LOCAL_PROFILE_ADDRESS&gt;
+
+# 3) ローカル画像とpayloadの準備
+.\.venv\Scripts\python.exe scripts\render_layout_samples.py
+.\.venv\Scripts\python.exe scripts\prepare_payload.py --image images\three_panel_text_picture_qr.png --profile evidence\device_profile_&lt;LATEST&gt;.json --protocol config\protocol_model_a0.json
+
+# 4) exact planに対する承認後だけ1回転送
+.\.venv\Scripts\python.exe scripts\write_test_image.py --plan evidence\write_plan_&lt;LATEST&gt;.json --profile evidence\device_profile_&lt;LATEST&gt;.json --scan logs\ble_scan_&lt;FRESH&gt;.json --approve --approval-note "&lt;承認内容&gt;"</code></pre>
+        <p class="small">この文書の作成時にはBLE接続・送信を実行していません。上記は既存の承認境界を示す再現コマンドです。</p>
+      </div>
+    </section>
+
+    <section id="state">
+      <h2>10. 状態・タイムアウト・復旧</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>推奨状態機械</h3>
+          <pre><code>IDLE
+  → DISCOVERING
+  → IDENTIFIED
+  → RENDERED
+  → APPROVAL_REQUIRED
+  → CONNECTING
+  → PREFLIGHT
+  → SUBSCRIBED
+  → SENDING_COMMANDS
+  → SENDING_PARTS
+  → COMPLETED
+  → DISCONNECTED
+  → VISUAL_CONFIRMATION</code></pre>
+          <p>どの送信状態から失敗しても<code>ABORTING → DISCONNECTED → FAILED</code>へ進みます。自動で<code>SENDING</code>へ戻りません。</p>
+        </div>
+        <div class="card">
+          <h3>現行の境界値</h3>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><th>接続timeout</th><td>既定15秒、許容5〜60秒</td></tr>
+                <tr><th>ACK timeout</th><td>既定5秒、許容1〜15秒</td></tr>
+                <tr><th>全転送timeout</th><td>90秒</td></tr>
+                <tr><th>通知安定化</th><td>1.0秒</td></tr>
+                <tr><th>part送信後wait</th><td>30 ms</td></tr>
+                <tr><th>自動retry</th><td>0回</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:15px">
+        <h3>失敗時の扱い</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>失敗</th><th>動作</th><th>再開条件</th></tr></thead>
+            <tbody>
+              <tr><td>候補0台/複数台</td><td>送信前にBLOCKED</td><td>電池・距離・他アプリ接続を確認し、新しいscanを保存</td></tr>
+              <tr><td>GATT構成変化</td><td>0 writeで停止</td><td>Read-only再調査。別firmwareなら新しい仕様として扱う</td></tr>
+              <tr><td>INIT ACKなし</td><td>停止、切断。画像は送らない</td><td>ログ確認、電源サイクル、別の明示承認</td></tr>
+              <tr><td>未知ACK / part不一致</td><td>即時停止、切断</td><td>プロトコル調査。推測で次partを送らない</td></tr>
+              <tr><td>05 08前の切断</td><td>転送失敗として記録</td><td>端末状態を目視し、新しい画像planと承認を用意</td></tr>
+              <tr><td>通信PASS・表示不正</td><td>回転/ミラー/レイアウト問題として分離</td><td>ローカル画像を修正し、別hashの新規承認</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>ロールバック:</strong> 画面は読戻せません。既知の良好なPNG/payloadをhash付きで保存し、問題時に別途承認された1回の再転送で戻します。ファームウェアやWindows設定の変更は復旧手段として使用しません。</p>
+      </div>
+    </section>
+
+    <section id="rendering">
+      <h2>11. 文字・絵・QRの設計</h2>
+      <div class="gallery">
+        <figure>
+          <img src="assets/sample_test_pattern.png" alt="初期TEST表示パターン">
+          <figcaption><b>方向確認</b>四隅マーカーで回転・ミラーを検出。</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/sample_clear_v3.png" alt="BLE OKの高可読性サンプル">
+          <figcaption><b>高可読性 v3</b>上10pxの安全域、整数ピクセル文字。</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/sample_three_panel.png" alt="文字、線画、QRの三分割サンプル">
+          <figcaption><b>三分割</b>文字・太い線画・Version 1 QR。</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/sample_qr_full.png" alt="中央に大きなQRコードを配置したサンプル">
+          <figcaption><b>QR単体</b>Version 2、3px/module。読取確認済み。</figcaption>
+        </figure>
+      </div>
+      <div class="grid-2" style="margin-top:15px">
+        <div class="card">
+          <h3>鮮明にするルール</h3>
+          <ul>
+            <li>上端に最低10 logical pxの安全域を置く。</li>
+            <li>細線や小文字を避け、整数座標・整数倍率のbitmap glyphを優先。</li>
+            <li>縮小される軸ではsource 4 px程度以上のstrokeを基準にする。</li>
+            <li>灰色・半透明・アンチエイリアス任せにせず、最後に完全な白黒へ量子化。</li>
+            <li>情報は1画面1目的。長文ではなく短い動詞＋アイコンを使う。</li>
+            <li>重要情報を外周ぎりぎりへ置かない。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>QRルール</h3>
+          <ul>
+            <li>四辺4 module以上のquiet zoneを維持。</li>
+            <li>moduleは整数pixel。三分割は2 px/module、単体は3 px/moduleで実機確認。</li>
+            <li>短いpayloadを使い、Versionを不必要に上げない。</li>
+            <li>Error correction Mを基準にする。</li>
+            <li>個人名、非公開URL、token、認証情報をQRへ直接埋め込まない。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout"><strong>アクセシビリティ:</strong> 操作手順を表示する場合は、抽象的な言葉だけでなく「STEP 1」「STEP 2」のように順序と次の行動を具体化し、必要に応じてアイコンを併記します。重要な通知ではESLだけを唯一の伝達手段にせず、別画面・音・人による確認などの代替経路を残します。</div>
+    </section>
+
+    <section id="integration">
+      <h2>12. 外部アプリとの汎用連携</h2>
+      <div class="card">
+        <p>外部アプリと連携する場合は、次のような端末非依存の表示要求をローカルキューへ渡します。特定アプリ名、BLEアドレス、利用者の個人情報、認証情報は要求本文へ含めません。</p>
+        <pre><code>{
+  "schema_version": "esl.display.v1",
+  "request_id": "&lt;locally-generated-id&gt;",
+  "target_alias": "&lt;local-device-alias&gt;",
+  "kind": "message",
+  "title": "NEXT",
+  "items": ["STEP 1", "STEP 2"],
+  "due_at": "&lt;optional-local-timestamp&gt;",
+  "expires_at": "&lt;optional-local-timestamp&gt;",
+  "priority": "normal"
+}</code></pre>
+        <h3>BLEワーカーから返す状態</h3>
+        <pre><code>QUEUED → RENDERED → APPROVAL_REQUIRED → SENDING
+       → TRANSPORT_DELIVERED → VISUAL_CONFIRMATION_PENDING
+       → CONFIRMED
+
+failure: BLOCKED | FAILED | EXPIRED | CANCELLED</code></pre>
+        <ul>
+          <li><code>TRANSPORT_DELIVERED</code>はACK完了と切断までであり、画面の読戻し成功ではありません。</li>
+          <li>自動送信するには、別途「自動送信ポリシー」の明示承認と、頻度・競合・期限切れ・手動停止の実装が必要です。</li>
+          <li>ESL送信に失敗しても、連携元アプリの主要機能は継続できるようにします。</li>
+          <li>同時要求は直列化し、古い要求を期限切れにします。送信中の割込みや同じ画面の連打はしません。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="test">
+      <h2>13. 試験と完了条件</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>自動試験</h3>
+          <ul class="checklist">
+            <li>scan分類、候補統合、privacyフィルタ</li>
+            <li>profile作成、曖昧候補のBLOCKED判定</li>
+            <li>Read-only scriptにWrite/Notify APIがないこと</li>
+            <li>250×132、RGB、完全な白黒</li>
+            <li>白frameは全<code>FF</code>、黒frameは全<code>00</code></li>
+            <li>payload長4,125 bytes</li>
+            <li>QR quiet zone、module size、三分割separator</li>
+            <li>plan/profile/scan/hash/deny-listの境界試験</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>実機受入</h3>
+          <ul class="checklist">
+            <li>Fresh Scanで単一0xA0候補</li>
+            <li>GATT preflight PASS</li>
+            <li>3 command + 18 image writes</li>
+            <li>part 0〜17を順序通りACK</li>
+            <li>最終<code>05 08</code></li>
+            <li>Notify停止・正常切断</li>
+            <li>目視で向き、見切れ、文字・絵を確認</li>
+            <li>QRは別カメラでpayloadを確認</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:15px">
+        <h3>確認済み結果</h3>
+        <p>初回は通知安定化不足により、FEF1への制御1回・画像0回で安全停止しました。1秒待機を追加した後は、3コマンド、18画像Write、順序通りのACK、<code>05 08</code>、正常切断を複数画面で確認しています。</p>
+        <p>文字・線画・QRの三分割を実機表示し、QR payload <code>ESL-A0</code>を読み取りました。QR単体画面では<code>ESL-A0-TEST</code>の読み取りをユーザーが確認しています。高可読性v3では上部見切れの調整位置を確認しています。</p>
+        <p class="small">実機写真や端末ラベルを含む証跡は本書へ埋め込まず、共有対象外のローカル領域で別管理します。</p>
+      </div>
+    </section>
+
+    <section id="privacy">
+      <h2>14. 安全・プライバシー</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>データ最小化</h3>
+          <ul>
+            <li>対象外BLE端末は件数だけを残し、名前・アドレスを保存しない。</li>
+            <li>対象アドレスとManufacturer Dataはgitignore対象のローカル証跡に限定。</li>
+            <li>公開HTMLへ実アドレス、前面ラベル番号、ネットワーク情報、token、利用者の個人情報を含めない。</li>
+            <li>画像とQRには必要最小限の行動情報だけを描画。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>操作境界</h3>
+          <ul>
+            <li>送信対象はhash-bound planと固定profileで拘束。</li>
+            <li>未知CharacteristicとOTA経路はdeny-list。</li>
+            <li>retryは0、timeoutは有限、disconnectを必ず実施。</li>
+            <li>現在の対話型運用では画像ごとの明示承認が必要。</li>
+            <li>外部クラウドや純正アプリへの送信は不要。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:15px">
+        <h3>Git配布の境界</h3>
+        <p>Gitリポジトリのルートは<code>esl-control</code>とします。機種共通のコード、文書、サンプル、<code>config/protocol_model_a0.json</code>だけを公開候補にし、実機・PC・利用者に結び付く情報はローカルに残します。</p>
+        <ul>
+          <li>公開しない: <code>.venv</code>、<code>logs</code>、<code>evidence</code>、生成画像、payload、実機写真、書込み履歴。</li>
+          <li>公開できる: <code>SEND_IMAGE.cmd</code>、<code>scripts</code>、<code>tests</code>、依存定義、匿名化済みHTML、機種共通設定、サンプル画像、無効化済みのプロファイル見本。</li>
+          <li><a href="../examples/device_profile.example.json"><code>examples/device_profile.example.json</code></a>は構造説明専用です。実アドレスを含まず、全安全ゲートが無効なので送信には使用できません。手入力で有効化したり、<code>evidence</code>へコピーしたりしないでください。</li>
+          <li>別PCでは、そのPCと端末の組合せで端末識別を行い、ローカルの<code>device_profile</code>を新しく作成します。</li>
+          <li><code>git add -f</code>で除外を上書きせず、commitとpushの前に公開前検査を実行します。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="unknowns">
+      <h2>15. 既知の未確認事項</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>項目</th><th>現在の結論</th><th>扱い</th></tr></thead>
+            <tbody>
+              <tr><td>直接テキスト命令</td><td>確認できず。FEF1/FEF2は画像転送として使用</td><td>PC側でラスタライズ</td></tr>
+              <tr><td>部分更新</td><td>確認できず。毎回4,125-byte full frame</td><td>実装しない</td></tr>
+              <tr><td>画面読戻し</td><td>確認できず</td><td>transportと目視確認を分離</td></tr>
+              <tr><td>FEF3</td><td>read/write可能だが意味不明</td><td><span class="tag forbidden">使用禁止</span></td></tr>
+              <tr><td>OTA/OAD</td><td>表示更新に不要、破損リスクあり</td><td><span class="tag forbidden">使用禁止</span></td></tr>
+              <tr><td>暗号化・認証</td><td>現行表示経路ではペアリング処理を使用していない</td><td>第三者書込み耐性は未評価</td></tr>
+              <tr><td>更新頻度と電池寿命</td><td>長期測定なし</td><td>自動運用前に計測</td></tr>
+              <tr><td>Linux/Raspberry Pi</td><td>設計上移植可能だが未実機検証</td><td>MTU、adapter、BlueZで再検証</td></tr>
+              <tr><td>日本語小文字</td><td>表示可能性はあるが可読性試験なし</td><td>太いbitmap fontで実機評価</td></tr>
+              <tr><td>別firmware/別lot</td><td>互換性保証なし</td><td>広告・GATT・ACKを最初から再確認</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="manifest">
+      <h2>16. 実装用プロトコルマニフェスト</h2>
+      <div class="card">
+        <p>コードへ転記する場合も、この値だけで対象を決めず、上記の識別ゲートを実装してください。</p>
+        <pre><code>{
+  "spec_id": "gicisky-tft-0xa0-display-v1",
+  "authority": "implementation-derived",
+  "model_id": 160,
+  "logical_size": [250, 132],
+  "color": "BW",
+  "payload_bytes": 4125,
+  "compression": false,
+  "service_uuid_short": "FEF0",
+  "command_uuid_short": "FEF1",
+  "image_uuid_short": "FEF2",
+  "chunk_image_bytes": 240,
+  "chunk_count": 18,
+  "index_format": "uint32-little-endian",
+  "bit_order": "msb-first",
+  "white_bit": 1,
+  "black_bit": 0,
+  "commands": {
+    "init": "01",
+    "size_prefix": "02",
+    "start": "03"
+  },
+  "notification_settle_ms": 1000,
+  "inter_part_delay_ms": 30,
+  "response_timeout_ms": 5000,
+  "transfer_timeout_ms": 90000,
+  "automatic_retries": 0,
+  "completion_prefix": "0508",
+  "forbidden_uuids": [
+    "FEF3",
+    "&lt;OTA/OAD UUID values are kept only in local source&gt;"
+  ]
+}</code></pre>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>17. 根拠ファイルと版管理</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>根拠</th><th>用途</th><th>公開上の扱い</th></tr></thead>
+            <tbody>
+              <tr><td><a href="../scripts/scan_ble.py">scripts/scan_ble.py</a></td><td>広告分類・privacy境界</td><td>機種共通ロジック</td></tr>
+              <tr><td><a href="../SEND_IMAGE.cmd">SEND_IMAGE.cmd</a></td><td>Windowsドラッグ＆ドロップ起動</td><td>端末識別子なし</td></tr>
+              <tr><td><a href="../scripts/send_image.py">scripts/send_image.py</a></td><td>初心者向け1コマンド送信</td><td>端末値はローカルprofileから取得</td></tr>
+              <tr><td><a href="../scripts/prepare_payload.py">scripts/prepare_payload.py</a></td><td>方向補正・bit packing・plan生成</td><td>機種共通ロジック</td></tr>
+              <tr><td><a href="../scripts/write_test_image.py">scripts/write_test_image.py</a></td><td>安全ゲート・通信状態機械</td><td>機種共通ロジック</td></tr>
+              <tr><td><a href="../config/protocol_model_a0.json">config/protocol_model_a0.json</a></td><td>Model/GATT/forbidden pathの機種共通設定</td><td>匿名化済み・公開可能</td></tr>
+              <tr><td><a href="../examples/device_profile.example.json">examples/device_profile.example.json</a></td><td>端末プロファイルの無効な構造見本</td><td>実機IDなし・全安全ゲート無効</td></tr>
+              <tr><td><a href="../scripts/check_public_release.py">scripts/check_public_release.py</a></td><td>Git公開候補の個体情報・秘密情報検査</td><td>公開前に実行</td></tr>
+              <tr><td><a href="../requirements.txt">requirements.txt</a></td><td>再現可能な依存版</td><td>機種共通</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>参照した外部実装</h3>
+        <ul>
+          <li><code>gicisky 0.2.1</code> source — Model 0xA0、FEF0/FEF1/FEF2、240-byte chunk、ACK処理</li>
+          <li><code>eigger/hass-gicisky</code>の監査時固定revision — TFT方向補正の独立照合（revision値は本書に非掲載）</li>
+          <li>Telink OAD/OTA UUID資料 — 表示更新経路からの除外根拠</li>
+        </ul>
+        <p class="small">外部資料は参考データであり、本書の安全境界やユーザー承認を上書きしません。将来依存ライブラリやfirmwareが変わった場合は、ローカルに保管した版情報と差分を比較して仕様版を更新してください。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p><strong>文書版:</strong> 1.6 / 2026-09-01 / Git配布用の無効なプロファイル見本と端末ID境界を追加 / 対象: Gicisky-PICKSMART互換 TFT 2.1 BW Model 0xA0</p>
+    <p><strong>閲覧上の注意:</strong> このHTMLを開くだけでは、BLEスキャン、接続、通知、端末Write、外部送信は実行されません。</p>
+  </footer>
+</body>
+</html>

@@ -51,6 +51,8 @@ TEXT_SUFFIXES = {
     ".yml",
 }
 
+JPEG_SUFFIXES = {".jpg", ".jpeg"}
+
 MACHINE_PATH_RE = re.compile(
     r"(?i)(?:[A-Z]:[\\/](?:Users|AI_Work)[\\/]|/Users/|/home/)"
 )
@@ -100,6 +102,18 @@ def find_private_markers(text: str) -> list[str]:
     return markers
 
 
+def find_embedded_image_metadata(data: bytes) -> list[str]:
+    """Return metadata classes that should not appear in public JPEG copies."""
+    markers: list[str] = []
+    if b"Exif\x00\x00" in data:
+        markers.append("embedded EXIF metadata")
+    if b"http://ns.adobe.com/xap/1.0/" in data:
+        markers.append("embedded XMP metadata")
+    if b"ICC_PROFILE\x00" in data:
+        markers.append("embedded ICC profile")
+    return markers
+
+
 def git_public_candidates(root: Path) -> list[str]:
     command = [
         "git",
@@ -145,7 +159,18 @@ def main() -> int:
             except ValueError:
                 failures.append(f"{relative_path}: symlink leaves repository")
             continue
-        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
+        if not path.is_file():
+            continue
+        if path.suffix.lower() in JPEG_SUFFIXES:
+            try:
+                data = path.read_bytes()
+            except OSError as error:
+                failures.append(f"{relative_path}: unreadable image ({error})")
+                continue
+            for marker in find_embedded_image_metadata(data):
+                failures.append(f"{relative_path}: {marker}")
+            continue
+        if path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         if relative_path == SELF_PATH:
             continue

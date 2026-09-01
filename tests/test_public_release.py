@@ -9,6 +9,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from check_public_release import (  # noqa: E402
+    find_embedded_image_metadata,
     find_private_markers,
     path_is_forbidden,
     private_ipv4_values,
@@ -48,6 +49,19 @@ class PublicPathTests(unittest.TestCase):
 
 
 class PublicContentTests(unittest.TestCase):
+    def test_embedded_jpeg_metadata_is_detected(self) -> None:
+        samples = {
+            b"jpeg-prefix Exif\x00\x00 payload": "embedded EXIF metadata",
+            b"jpeg-prefix http://ns.adobe.com/xap/1.0/ payload": "embedded XMP metadata",
+            b"jpeg-prefix ICC_PROFILE\x00 payload": "embedded ICC profile",
+        }
+        for data, expected in samples.items():
+            with self.subTest(expected=expected):
+                self.assertIn(expected, find_embedded_image_metadata(data))
+
+    def test_metadata_free_jpeg_is_allowed(self) -> None:
+        self.assertEqual(find_embedded_image_metadata(b"JFIF image data"), [])
+
     def test_private_identifiers_are_detected(self) -> None:
         samples = {
             r"C:" + r"\Users\example\project": "machine-specific absolute path",

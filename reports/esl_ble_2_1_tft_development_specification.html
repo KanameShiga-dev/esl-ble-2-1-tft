@@ -896,7 +896,7 @@ failure: BLOCKED | FAILED | EXPIRED | CANCELLED</code></pre>
         <h3>確認済み結果</h3>
         <p>初回は通知安定化不足により、FEF1への制御1回・画像0回で安全停止しました。1秒待機を追加した後は、3コマンド、18画像Write、順序通りのACK、<code>05 08</code>、正常切断を複数画面で確認しています。</p>
         <p>文字・線画・QRの三分割を実機表示し、QR payload <code>ESL-A0</code>を読み取りました。QR単体画面では<code>ESL-A0-TEST</code>の読み取りをユーザーが確認しています。高可読性v3では上部見切れの調整位置を確認しています。</p>
-        <p class="small">実機写真や端末ラベルを含む証跡は本書へ埋め込まず、共有対象外のローカル領域で別管理します。</p>
+        <p class="small">実機写真や端末ラベルを含む原本証跡は本書へ埋め込まず、共有対象外のローカル領域で別管理します。記事用に選定し、個体識別情報の目視確認と埋込みメタデータ除去を行った限定コピーだけは、<code>articles/assets</code>で公開します。</p>
       </div>
     </section>
 
@@ -927,7 +927,8 @@ failure: BLOCKED | FAILED | EXPIRED | CANCELLED</code></pre>
         <h3>Git配布の境界</h3>
         <p>Gitリポジトリのルートは<code>esl-control</code>とします。機種共通のコード、文書、サンプル、<code>config/protocol_model_a0.json</code>だけを公開候補にし、実機・PC・利用者に結び付く情報はローカルに残します。</p>
         <ul>
-          <li>公開しない: <code>.venv</code>、<code>logs</code>、<code>evidence</code>、生成画像、payload、実機写真、書込み履歴。</li>
+          <li>公開しない: <code>.venv</code>、<code>logs</code>、<code>evidence</code>、生成画像、payload、実機写真の原本・未選定写真、書込み履歴。</li>
+          <li>限定公開: <code>articles/assets</code>に置く記事用写真だけ。個体識別情報を目視確認し、EXIFなどの埋込みメタデータを除去したコピーに限ります。</li>
           <li>公開できる: <code>SEND_IMAGE.cmd</code>、<code>scripts</code>、<code>tests</code>、依存定義、匿名化済みHTML、機種共通設定、サンプル画像、無効化済みのプロファイル見本。</li>
           <li><a href="../examples/device_profile.example.json"><code>examples/device_profile.example.json</code></a>は構造説明専用です。実アドレスを含まず、全安全ゲートが無効なので送信には使用できません。手入力で有効化したり、<code>evidence</code>へコピーしたりしないでください。</li>
           <li>別PCでは、そのPCと端末の組合せで端末識別を行い、ローカルの<code>device_profile</code>を新しく作成します。</li>
@@ -1030,7 +1031,7 @@ failure: BLOCKED | FAILED | EXPIRED | CANCELLED</code></pre>
   </main>
 
   <footer class="wrap">
-    <p><strong>文書版:</strong> 1.6 / 2026-09-01 / Git配布用の無効なプロファイル見本と端末ID境界を追加 / 対象: Gicisky-PICKSMART互換 TFT 2.1 BW Model 0xA0</p>
+    <p><strong>文書版:</strong> 1.7 / 2026-09-01 / 記事用の限定写真と公開前確認の境界を追加 / 対象: Gicisky-PICKSMART互換 TFT 2.1 BW Model 0xA0</p>
     <p><strong>閲覧上の注意:</strong> このHTMLを開くだけでは、BLEスキャン、接続、通知、端末Write、外部送信は実行されません。</p>
   </footer>
 </body>

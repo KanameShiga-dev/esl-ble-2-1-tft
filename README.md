@@ -61,8 +61,10 @@ identification workflow on the receiving PC so the real profile is created
 locally from observed scan, power-cycle, GATT, and protocol evidence.
 
 The following paths are intentionally excluded by `.gitignore`: `.venv`,
-`logs`, `evidence`, generated `images`, real-device photos, and the private
-experiment report. Before committing or pushing, run:
+`logs`, `evidence`, generated `images`, unselected or original real-device
+photos, and the private experiment report. The only public real-device photos
+are the deliberately selected, visually reviewed, metadata-stripped article
+copies under `articles/assets/`. Before committing or pushing, run:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\check_public_release.py
@@ -210,8 +212,9 @@ approved image write.
 - Session logs and JSON results are under `logs/`.
 - Machine-local evidence is under `evidence/`.
 - BLE identifiers and all machine-local evidence are ignored by Git.
-- Do not publish scan logs, `device_profile*.json`, write histories, or
-  real-device photographs.
+- Do not publish scan logs, `device_profile*.json`, write histories, original
+  photographs, or unreviewed real-device photographs. Only the reviewed,
+  metadata-stripped article copies under `articles/assets/` are public.
 - The tracked `config\protocol_model_a0.json` is model-common and contains no
   device address or user data.
 
